@@ -26,12 +26,12 @@ def generate_company_name():
 def generate_applicant(policy):
     family_size = np.random.randint(1, 8)
 
-    monthly_income = max(500, np.random.lognormal(mean=8, sigma=0.5))
-    total_assets = max(0, np.random.lognormal(mean=11, sigma=0.7))
+    monthly_income = max(1000, np.random.lognormal(mean=10, sigma=0.5))
+    total_assets = max(0, np.random.lognormal(mean=11, sigma=1))
     liabilities = np.random.uniform(0, total_assets * 0.6)
 
     # Disability prevalence = 4%
-    disability_flag = np.random.choice([0, 1], p=[0.96, 0.04])
+    disability_flag = np.random.choice([0, 1], p=[0.98, 0.02])
 
     income_per_capita = monthly_income / family_size
     net_worth = total_assets - liabilities
@@ -43,8 +43,8 @@ def generate_applicant(policy):
     )
 
     # Disability-aware probabilistic uplift
-    if disability_flag == 1 and base_eligible:
-        eligible = np.random.choice([1, 0], p=[0.6, 0.4])
+    if disability_flag == 1 and not base_eligible:
+        eligible = np.random.choice([1, 0], p=[0.3, 0.7])
     else:
         eligible = int(base_eligible)
 

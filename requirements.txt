@@ -12,3 +12,4 @@ langgraph
 chromadb
 pyyaml
 ipykernel
+matplotlib

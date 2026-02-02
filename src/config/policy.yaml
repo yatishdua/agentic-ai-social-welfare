@@ -1,5 +1,5 @@
-income_threshold: 5000
-asset_threshold: 200000
+income_threshold: 3000
+asset_threshold: 120000
 min_family_size: 1
 
 confidence_thresholds:
