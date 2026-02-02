@@ -1,6 +1,6 @@
 __pycache__/
 .env
-data/synthetic/*
+data/*/*
 *.ipynb
 .DS_Store
 venv/

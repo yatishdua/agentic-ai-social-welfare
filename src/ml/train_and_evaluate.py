@@ -11,8 +11,15 @@ from sklearn.metrics import (
     roc_auc_score,
     precision_score
 )
+from src.utils.path_utils import project_path
 
-DATA_PATH = "data/synthetic/applicants.csv"
+
+import joblib
+import os
+
+
+DATA_PATH = project_path("data", "synthetic", "applicants.csv")
+
 RANDOM_STATE = 42
 
 
@@ -118,6 +125,13 @@ def run_training():
         gb_model, X_test, y_test, "Gradient Boosting"
     )
     bias_analysis(df, gb_model, "Gradient Boosting")
+
+    # Save model
+    model_path = project_path("models", "eligibility_model.pkl")
+    model_path.parent.mkdir(exist_ok=True)
+    joblib.dump(gb_model, model_path)
+
+    print("\nModel saved to models/eligibility_model.pkl")
 
     print("\n===== Model Comparison =====")
     print("Logistic Regression:", lr_metrics)

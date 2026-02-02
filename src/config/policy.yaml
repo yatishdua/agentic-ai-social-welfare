@@ -9,3 +9,7 @@ confidence_thresholds:
 disability_priority:
   enabled: true
   description: "Disability is treated as a legitimate vulnerability factor"
+
+extraction:
+  mode: LLM              # REGEX | LLM
+  regex_confidence_threshold: 0.75

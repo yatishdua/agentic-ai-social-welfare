@@ -1,7 +1,10 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-DATA_PATH = "data/synthetic/applicants.csv"
+from src.utils.path_utils import project_path
+
+DATA_PATH = project_path("data", "synthetic", "applicants.csv")
+
 
 
 def load_data(path=DATA_PATH):
