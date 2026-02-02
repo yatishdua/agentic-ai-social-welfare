@@ -11,5 +11,5 @@ disability_priority:
   description: "Disability is treated as a legitimate vulnerability factor"
 
 extraction:
-  mode: LLM              # REGEX | LLM
+  mode: REGEX              # REGEX | LLM
   regex_confidence_threshold: 0.75
