@@ -1,6 +1,3 @@
-import streamlit as st
-import pandas as pd
-
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
@@ -13,141 +10,143 @@ sys.path.append(str(PROJECT_ROOT))
 load_dotenv(PROJECT_ROOT / ".env")
 
 
+import streamlit as st
 
 from src.agents.langgraph.graph import build_application_graph
 from src.utils.path_utils import project_path
 
 
 st.set_page_config(
-    page_title="AI Social Support Eligibility System",
+    page_title="AI Social Welfare Eligibility",
     layout="wide"
 )
 
-st.title("🧠 AI-Driven Social Support Eligibility System")
+st.title("🏛️ Social Welfare Eligibility Application")
 
-st.markdown(
-    """
-    This system evaluates social support applications using:
-    - Document OCR
-    - Policy-driven extraction (Regex / LLM)
-    - Validation & conflict resolution
-    - ML-based eligibility scoring
-    - Human-in-the-loop governance
-    """
-)
-
-# -------------------------------------------------------------------
-# Sidebar – Configuration
-# -------------------------------------------------------------------
-st.sidebar.header("⚙️ Configuration")
-
-extraction_mode = st.sidebar.selectbox(
-    "Extraction Mode",
-    ["REGEX", "LLM"],
-    help="Controls how document extraction is performed"
-)
-
-st.sidebar.markdown("---")
-st.sidebar.info(
-    "Change extraction mode in policy.yaml for backend execution.\n\n"
-    "This toggle is for demo visibility."
-)
-
-# -------------------------------------------------------------------
-# Load graph once
-# -------------------------------------------------------------------
+# -----------------------------
+# Build graph once
+# -----------------------------
 @st.cache_resource
 def load_graph():
     return build_application_graph()
 
-
 graph = load_graph()
 
-# -------------------------------------------------------------------
-# Applicant Form
-# -------------------------------------------------------------------
-st.header("📄 Applicant Application Form")
+# -----------------------------
+# Base upload directory
+# -----------------------------
+UPLOAD_ROOT = project_path("data", "uploads")
+UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
 
-col1, col2 = st.columns(2)
+# -----------------------------
+# Application Form
+# -----------------------------
+st.header("📄 Applicant Information")
 
-with col1:
-    monthly_income = st.number_input(
-        "Monthly Income (Declared)", min_value=0, value=4000
+with st.form("application_form"):
+
+    emirates_id = st.text_input(
+        "Emirates ID",
+        placeholder="784-XXXX-XXXXXXX-X"
     )
+
     family_size = st.number_input(
-        "Family Size", min_value=1, value=4
-    )
-    net_worth = st.number_input(
-        "Net Worth", min_value=0, value=50000
+        "Family Size",
+        min_value=1,
+        step=1
     )
 
-with col2:
     employment_status = st.selectbox(
         "Employment Status",
         ["employed", "unemployed"]
     )
-    disability_flag = st.checkbox(
-        "Applicant has a disability"
+
+    disability_flag = st.checkbox("Disability (Yes / No)")
+
+    # -------- Financial Declaration --------
+    st.subheader("💰 Financial Details (Self-declared)")
+
+    monthly_income = st.number_input(
+        "Declared Monthly Income",
+        min_value=0,
+        step=500
     )
 
-st.markdown("---")
+    total_assets = st.number_input(
+        "Total Assets",
+        min_value=0,
+        step=5000
+    )
 
-# -------------------------------------------------------------------
-# Document Selection
-# -------------------------------------------------------------------
-st.header("📎 Select Applicant Documents")
+    # -------- Documents --------
+    st.subheader("📎 Upload Documents")
 
-df = pd.read_csv(project_path("data", "synthetic", "applicants.csv"))
+    bank_file = st.file_uploader(
+        "Upload Bank Statement (PDF)",
+        type=["pdf"]
+    )
 
-selected_applicant = st.selectbox(
-    "Select Applicant ID (for demo)",
-    df["applicant_id"].tolist()
-)
+    credit_file = st.file_uploader(
+        "Upload Credit Report (PDF)",
+        type=["pdf"]
+    )
 
-bank_path = project_path(
-    "data", "raw", "bank_statements",
-    f"{selected_applicant}_bank_statement.pdf"
-)
+    submitted = st.form_submit_button("Submit Application")
 
-credit_path = project_path(
-    "data", "raw", "credit_reports",
-    f"{selected_applicant}_credit_report.pdf"
-)
+# -----------------------------
+# Handle Submission
+# -----------------------------
+if submitted:
 
-st.write("📄 Bank Statement:", bank_path.name)
-st.write("📄 Credit Report:", credit_path.name)
+    if not emirates_id:
+        st.error("Emirates ID is required.")
+        st.stop()
 
-# -------------------------------------------------------------------
-# Run Decision
-# -------------------------------------------------------------------
-st.markdown("---")
+    if not bank_file or not credit_file:
+        st.error("Both bank statement and credit report are required.")
+        st.stop()
 
-if st.button("🚀 Submit Application"):
-    with st.spinner("Processing application..."):
+    # Create applicant-specific folder
+    applicant_dir = UPLOAD_ROOT / emirates_id.replace(" ", "")
+    applicant_dir.mkdir(parents=True, exist_ok=True)
 
-        state = {
-            "applicant_id": selected_applicant,
-            "ui_data": {
-                "monthly_income": monthly_income,
-                "income_per_capita": monthly_income / family_size,
-                "net_worth": net_worth,
-                "family_size": family_size,
-                "employment_status": 1 if employment_status == "employed" else 0,
-                "disability_flag": 1 if disability_flag else 0
-            },
-            "bank_statement_path": bank_path,
-            "credit_report_path": credit_path,
-            "audit_log": []
-        }
+    bank_path = applicant_dir / "bank_statement.pdf"
+    credit_path = applicant_dir / "credit_report.pdf"
 
-        result = graph.invoke(state)
+    # Save files (overwrite allowed for retries)
+    with open(bank_path, "wb") as f:
+        f.write(bank_file.getbuffer())
 
-    st.success("Application processed successfully!")
+    with open(credit_path, "wb") as f:
+        f.write(credit_file.getbuffer())
 
-    # ----------------------------------------------------------------
-    # Decision Output
-    # ----------------------------------------------------------------
-    st.header("✅ Decision Result")
+    # Initial graph state
+    state = {
+        "ui_data": {
+            "emirates_id": emirates_id,
+            "family_size": family_size,
+            "employment_status": 1 if employment_status == "employed" else 0,
+            "disability_flag": 1 if disability_flag else 0,
+            "monthly_income": monthly_income,
+            "net_worth": total_assets,
+            "income_per_capita": (monthly_income / family_size) if family_size > 0 else 0
+        },
+        "bank_statement_path": str(bank_path),
+        "credit_report_path": str(credit_path),
+        "audit_log": []
+    }
+
+    # Run graph
+    result = graph.invoke(state)
+
+    # -----------------------------
+    # Display Results
+    # -----------------------------
+    st.divider()
+    st.header("✅ Application Result")
+
+
+    st.subheader("Decision")
 
     status = result.get("status")
 
@@ -160,19 +159,39 @@ if st.button("🚀 Submit Application"):
     else:
         st.info(f"Status: {status}")
 
+    if status == "ASK_USER":
+        st.write("Please review the validation issues and resubmit the application with correct information.")
+        st.write("**Validation Issues:**")
+        for issue in result["validation_result"].get("issues", []):
+            st.write("-", issue)
+
     if "eligibility_result" in result:
         st.metric(
             label="Eligibility Score",
             value=result["eligibility_result"]["eligibility_score"]
         )
 
-    # ----------------------------------------------------------------
-    # Audit Trail
-    # ----------------------------------------------------------------
-    st.header("🧾 Audit Trail")
+        # -----------------------------
+        # Explanation
+        # -----------------------------
+        if "explanation" in result["eligibility_result"]:
+            st.subheader("📝 Decision Explanation")
+            st.write(result["eligibility_result"]["explanation"]["summary"])
 
-    for step in result["audit_log"]:
-        st.write("•", step)
+            st.markdown("**Key Factors:**")
+            for factor in result["eligibility_result"]["explanation"]["key_factors"]:
+                st.write("•", factor)
+
+    # -----------------------------
+    # Audit / Debug
+    # -----------------------------
+    with st.expander("🔍 Audit Trail"):
+        for step in result["audit_log"]:
+            st.write("-", step)
+
+    with st.expander("📄 Stored Documents"):
+        st.write("Bank Statement:", str(bank_path))
+        st.write("Credit Report:", str(credit_path))
 
     # ----------------------------------------------------------------
     # Debug Section (Optional)

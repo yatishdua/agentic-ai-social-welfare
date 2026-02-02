@@ -1,27 +1,26 @@
-from typing import TypedDict, Optional, Dict, Any
+from typing import TypedDict, Dict, Any, List
 
 
 class ApplicationState(TypedDict):
     applicant_id: str
 
-    # Inputs
     ui_data: Dict[str, Any]
+
     bank_statement_path: str
     credit_report_path: str
 
-    # OCR
-    bank_text: Optional[str]
-    credit_text: Optional[str]
+    bank_text: str
+    credit_text: str
 
-    # Extraction
-    extracted_fields: Optional[Dict[str, Any]]
+    # Document-level extraction
+    bank_extraction: Dict[str, Any]
+    credit_extraction: Dict[str, Any]
 
-    # Validation
-    validation_result: Optional[Dict[str, Any]]
+    # Normalized business features
+    normalized_features: Dict[str, Any]
 
-    # Eligibility
-    eligibility_result: Optional[Dict[str, Any]]
+    validation_result: Dict[str, Any]
+    eligibility_result: Dict[str, Any]
 
-    # Final
-    status: Optional[str]
-    audit_log: list
+    status: str
+    audit_log: List[str]

@@ -13,3 +13,10 @@ disability_priority:
 extraction:
   mode: REGEX              # REGEX | LLM
   regex_confidence_threshold: 0.75
+
+llm:
+  provider: openai        # openai | ollama
+  model:
+    openai: gpt-4o-mini
+    ollama: llama3.2
+  temperature: 0
