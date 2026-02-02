@@ -1,0 +1,13 @@
+numpy
+pandas
+scikit-learn
+faker
+pillow
+reportlab
+openpyxl
+fastapi
+streamlit
+langchain
+langgraph
+chromadb
+pyyaml

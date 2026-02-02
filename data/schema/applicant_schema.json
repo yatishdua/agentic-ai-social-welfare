@@ -1,0 +1,13 @@
+{
+  "applicant_id": "string",
+  "age": "integer",
+  "gender": "string",
+  "nationality": "string",
+  "family_size": "integer",
+  "employment_status": "string",
+  "monthly_income": "number",
+  "total_assets": "number",
+  "liabilities": "number",
+  "disability_flag": "boolean",
+  "eligible_label": "boolean"
+}

@@ -1,0 +1,11 @@
+income_threshold: 5000
+asset_threshold: 200000
+min_family_size: 1
+
+confidence_thresholds:
+  auto_approve: 0.9
+  human_review: 0.6
+
+disability_priority:
+  enabled: true
+  description: "Disability is treated as a legitimate vulnerability factor"
