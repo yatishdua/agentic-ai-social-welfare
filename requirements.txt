@@ -14,3 +14,6 @@ pyyaml
 ipykernel
 matplotlib
 pdfplumber
+langsmith
+python-dotenv
+

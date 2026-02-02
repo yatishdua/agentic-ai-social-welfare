@@ -7,9 +7,17 @@ from src.agents.langgraph.nodes import (
     eligibility_node
 )
 
+from dotenv import load_dotenv
+from src.utils.path_utils import get_project_root
+
+load_dotenv(get_project_root() / ".env")
+
+
 
 def build_application_graph():
     graph = StateGraph(ApplicationState)
+
+    
 
     graph.add_node("ocr", ocr_node)
     graph.add_node("extract", extraction_node)
