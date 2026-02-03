@@ -9,3 +9,6 @@ class BankStatementSchema(BaseModel):
 
 class CreditReportSchema(BaseModel):
     credit_score: Optional[int]
+
+class EmiratesIDResult(BaseModel):
+    emirates_id: str | None

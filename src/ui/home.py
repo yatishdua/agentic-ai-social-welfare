@@ -8,13 +8,13 @@ def render_home():
         """
         Welcome to the **AI-powered Social Welfare Eligibility System**.
 
-        You can apply for welfare benefits in two ways:
+        You can apply for welfare benefits in three ways:
         """
     )
 
     st.markdown("---")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         st.subheader("🤖 Chat with Assistant")
@@ -33,6 +33,15 @@ def render_home():
         )
         if st.button("Apply via Form"):
             st.session_state.screen = "form"
+
+    with col3:
+        st.subheader("📝 LLM driven Assisstant")
+        st.write(
+            "Have a conversation with our AI assistant. "
+            "Best if you prefer guided, step-by-step help."
+        )
+        if st.button("Start LLM Assistant"):
+            st.session_state.screen = "chatbot_llm"
 
     st.markdown("---")
 

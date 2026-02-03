@@ -80,9 +80,11 @@ def render_chatbot():
 
             "bank_statement_path": None,
             "credit_report_path": None,
+            "emirates_id_path": None,
 
             "awaiting_bank": False,
             "awaiting_credit": False,
+            "awaiting_emirates_id": False,
             "graph_invoked": False,
         }
 
@@ -139,11 +141,39 @@ def render_chatbot():
 
             st.session_state.chat_state["credit_report_path"] = path
             st.session_state.chat_state["awaiting_credit"] = False
+            st.session_state.chat_state["awaiting_emirates_id"] = True
 
             st.session_state.chat_messages.append(
                 {
                     "role": "assistant",
-                    "content": "✅ Credit report uploaded. Assessing eligibility now..."
+                    "content": "✅ Credit report uploaded. Please upload your Emirates ID."
+                }
+            )
+            st.rerun()
+
+    # -------------------------------
+    # Emiratee ID upload
+    # -------------------------------
+    if st.session_state.chat_state["awaiting_emirates_id"]:
+        emirates_file = st.file_uploader(
+            "Upload Emirates ID (Image only)",
+            type=["png", "jpg", "jpeg"],
+            key="emirates_upload",
+        )
+
+        if emirates_file:
+            emirates_id = st.session_state.chat_state["ui_data"]["emirates_id"]
+            path = save_file_to_applicant_folder(
+                emirates_file, emirates_id, "emirates_id.jpg"
+            )
+
+            st.session_state.chat_state["emirates_id_path"] = path
+            st.session_state.chat_state["awaiting_emirates_id"] = False
+
+            st.session_state.chat_messages.append(
+                {
+                    "role": "assistant",
+                    "content": "✅ Emirates ID uploaded. Assessing eligibility now..."
                 }
             )
             st.rerun()
@@ -154,6 +184,7 @@ def render_chatbot():
     if (
         st.session_state.chat_state["bank_statement_path"]
         and st.session_state.chat_state["credit_report_path"]
+        and st.session_state.chat_state["emirates_id_path"]
         and not st.session_state.chat_state["graph_invoked"]
     ):
         raw_ui_data = st.session_state.chat_state["ui_data"]
@@ -174,6 +205,7 @@ def render_chatbot():
 
         app_state["bank_statement_path"] = st.session_state.chat_state["bank_statement_path"]
         app_state["credit_report_path"] = st.session_state.chat_state["credit_report_path"]
+        app_state["emirates_id_image_path"] = st.session_state.chat_state["emirates_id_path"]
 
         result = graph.invoke(app_state)
 

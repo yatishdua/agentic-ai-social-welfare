@@ -23,6 +23,18 @@ class ValidationAgent:
                 f"Income mismatch: UI={ui_income}, Bank={bank_income}"
             )
             return None, "ASK_USER", issues
+        
+    def validate_emirates_id(self, ui_emirates_id, extracted_emirates_id, confidence):
+        issues = []
+
+        if confidence < self.min_confidence:
+            return None, "HUMAN_REVIEW", ["Low confidence in Emirates ID extraction"]
+
+        if ui_emirates_id != extracted_emirates_id:
+            issues.append(f"Emirates ID mismatch: UI={ui_emirates_id}, Extracted={extracted_emirates_id}")
+            return None, "ASK_USER", issues
+
+        return extracted_emirates_id, "AUTO_PROCEED", []
 
     def validate(self, ui_data: dict, extracted_data: dict):
         """
@@ -54,6 +66,28 @@ class ValidationAgent:
         else:
             actions.append("ASK_USER")
             issues.append("Monthly income missing from bank statement")
+
+
+        # --- Emirates ID validation ---
+        if "emirates_id" in extracted_data["fields"]:
+            extracted_emirates_id = extracted_data["fields"]["emirates_id"]["value"]
+            emirates_id_conf = extracted_data["fields"]["emirates_id"]["confidence"]
+
+            emirates_id, action, eid_issues = self.validate_emirates_id(
+                ui_emirates_id=ui_data["emirates_id"],
+                extracted_emirates_id=extracted_emirates_id,
+                confidence=emirates_id_conf
+            )
+
+            actions.append(action)
+            issues.extend(eid_issues)
+
+            if emirates_id:
+                validated["emirates_id"] = emirates_id
+
+        else:
+            actions.append("ASK_USER")
+            issues.append("Emirates ID missing from extracted data")
 
         # --- Final decision ---
         if "HUMAN_REVIEW" in actions:

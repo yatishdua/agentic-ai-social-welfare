@@ -5,6 +5,7 @@ from src.agents.eligibility_agent import EligibilityAgent
 from src.agents.explanation.explanation_agent import ExplanationAgent
 from src.agents.extraction.document_types import DocumentType
 from src.agents.extraction.normalizer import FeatureNormalizer
+from src.agents.ocr.emirates_id_ocr import OcrEmiratesId
 
 
 
@@ -17,19 +18,24 @@ normalizer = FeatureNormalizer()
 eligibility_agent = EligibilityAgent()
 validation_agent = ValidationAgent()
 explanation_agent = ExplanationAgent()
+emirates_id_ocr_agent = OcrEmiratesId()
 
 
 # -------------------------------
 # OCR NODE
 # -------------------------------
 def ocr_node(state):
+    state["status"] = "Running OCR"
     state["audit_log"].append("OCR started")
 
     bank = ocr_agent.extract_text(state["bank_statement_path"])
     credit = ocr_agent.extract_text(state["credit_report_path"])
 
+    emirates_id = emirates_id_ocr_agent.ocr_emirates_id(state["emirates_id_image_path"])
+
     state["bank_text"] = bank["text"]
     state["credit_text"] = credit["text"]
+    state["emirate_text"] = emirates_id
 
     state["audit_log"].append("OCR completed")
     return state
@@ -51,12 +57,22 @@ def extraction_node(state):
         DocumentType.CREDIT_REPORT
     )
 
+    emiratee_id_extracted = extraction_agent.extract(
+        state["emirate_text"],
+        DocumentType.EMIRATES_ID
+    )
+
+    
+    
+
     state["bank_extraction"] = bank_extracted
     state["credit_extraction"] = credit_extracted
+    state["emirate_text_extraction"] = emiratee_id_extracted
 
     state["normalized_features"] = normalizer.normalize(
         bank_data=bank_extracted,
-        credit_data=credit_extracted
+        credit_data=credit_extracted,
+        emirate_data=emiratee_id_extracted
     )
 
     state["audit_log"].append("Extraction completed")

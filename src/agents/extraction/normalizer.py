@@ -4,7 +4,7 @@ class FeatureNormalizer:
     validation-ready evidence.
     """
 
-    def normalize(self, bank_data: dict, credit_data: dict) -> dict:
+    def normalize(self, bank_data: dict, credit_data: dict, emirate_data: str) -> dict:
         evidence = {"fields": {}}
 
         # --- Monthly Income ---
@@ -21,6 +21,14 @@ class FeatureNormalizer:
                 "value": credit_data["credit_score"],
                 "confidence": credit_data.get("confidence", 0.8),
                 "source": credit_data.get("source", "LLM")
+            }
+
+        # --- Emirates ID Validity ---
+        if emirate_data.get("emirates_id") is not None:
+            evidence["fields"]["emirates_id"] = {
+                "value": emirate_data["emirates_id"],
+                "confidence": emirate_data.get("confidence", 0.9),
+                "source": emirate_data.get("source", "OCR")
             }
 
         return evidence

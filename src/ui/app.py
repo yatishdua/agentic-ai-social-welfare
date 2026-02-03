@@ -16,7 +16,11 @@ from src.agents.langgraph.graph import build_application_graph
 from src.utils.path_utils import project_path
 
 
+
+
+
 def run_form_app():
+
 
     st.set_page_config(
         page_title="AI Social Welfare Eligibility",
@@ -93,6 +97,13 @@ def run_form_app():
             type=["pdf"]
         )
 
+        st.subheader("Emirates ID Verification")
+
+        id_image = st.file_uploader(
+            "Upload Emirates ID Card (Image)",
+            type=["png", "jpg", "jpeg"]
+        )
+
         submitted = st.form_submit_button("Submit Application")
 
     # -----------------------------
@@ -107,6 +118,10 @@ def run_form_app():
         if not bank_file or not credit_file:
             st.error("Both bank statement and credit report are required.")
             st.stop()
+        
+        if not id_image:
+            st.error("Emirates ID image is required.")
+            st.stop()
 
         # Create applicant-specific folder
         applicant_dir = UPLOAD_ROOT / emirates_id.replace(" ", "")
@@ -114,6 +129,7 @@ def run_form_app():
 
         bank_path = applicant_dir / "bank_statement.pdf"
         credit_path = applicant_dir / "credit_report.pdf"
+        id_image_path = applicant_dir / "emirates_id.jpg"
 
         # Save files (overwrite allowed for retries)
         with open(bank_path, "wb") as f:
@@ -121,6 +137,9 @@ def run_form_app():
 
         with open(credit_path, "wb") as f:
             f.write(credit_file.getbuffer())
+
+        with open(id_image_path, "wb") as f:
+            f.write(id_image.getbuffer())
 
         # Initial graph state
         state = {
@@ -135,11 +154,14 @@ def run_form_app():
             },
             "bank_statement_path": str(bank_path),
             "credit_report_path": str(credit_path),
+            "emirates_id_image_path": str(id_image_path),
             "audit_log": []
         }
 
         # Run graph
         result = graph.invoke(state)
+
+        
 
         # -----------------------------
         # Display Results
@@ -151,6 +173,7 @@ def run_form_app():
         st.subheader("Decision")
 
         status = result.get("status")
+
 
         if status == "AUTO_APPROVE":
             st.success("🎉 Application Auto-Approved")

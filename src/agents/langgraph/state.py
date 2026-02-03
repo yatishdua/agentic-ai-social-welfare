@@ -13,12 +13,18 @@ class ApplicationState(TypedDict):
     bank_statement_path: str
     credit_report_path: str
 
+    emirates_id_image_path: str
+
     bank_text: str
     credit_text: str
+
+    emirate_text: str
 
     # Document-level extraction
     bank_extraction: Dict[str, Any]
     credit_extraction: Dict[str, Any]
+
+    emirate_text_extraction: Dict[str, Any]
 
     # Normalized business features
     normalized_features: Dict[str, Any]
