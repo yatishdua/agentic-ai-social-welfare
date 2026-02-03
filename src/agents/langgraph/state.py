@@ -4,6 +4,8 @@ from typing import TypedDict, Dict, Any, List
 class ApplicationState(TypedDict):
     applicant_id: str
 
+    enablement_recommendations: Dict[str, Any]
+
     # NEW (safe additions)
     interaction_mode: str            # "form" | "chatbot"
     intent: str                      # "APPLY_WELFARE" | "KNOW_CRITERIA"

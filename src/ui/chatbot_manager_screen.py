@@ -48,6 +48,7 @@ def render_chatbot_manager(policy_vectorstore=None):
             "confirm_submit": None,
             "bank_statement_path": None,
             "credit_report_path": None,
+            "emirates_id_path": None,
             "audit_log": [],
         }
 
@@ -63,22 +64,32 @@ def render_chatbot_manager(policy_vectorstore=None):
 
         bank = st.file_uploader("Bank Statement (PDF)", type=["pdf"])
         credit = st.file_uploader("Credit Report (PDF)", type=["pdf"])
+        emirates_file = st.file_uploader(
+            "Upload Emirates ID (Image only)",
+            type=["png", "jpg", "jpeg"],
+            key="emirates_upload",
+        )
 
-        if bank and credit:
+        if bank and credit and emirates_file:
             eid = state["ui_data"]["emirates_id"]
             base = f"data/uploads/{eid}"
             os.makedirs(base, exist_ok=True)
 
             bank_path = f"{base}/bank_statement.pdf"
             credit_path = f"{base}/credit_report.pdf"
+            emirates_path = f"{base}/emirates_id.jpg"
 
             with open(bank_path, "wb") as f:
                 f.write(bank.getbuffer())
             with open(credit_path, "wb") as f:
                 f.write(credit.getbuffer())
 
+            with open(emirates_path, "wb") as f:
+                f.write(emirates_file.getbuffer())
+
             st.session_state.state["bank_statement_path"] = bank_path
             st.session_state.state["credit_report_path"] = credit_path
+            st.session_state.state["emirates_id_path"] = emirates_path
 
             # Invoke graph
             normalized_ui_data = normalize_chat_ui_data(st.session_state.state["ui_data"])
@@ -90,6 +101,7 @@ def render_chatbot_manager(policy_vectorstore=None):
 
             app_state["bank_statement_path"] = st.session_state.state["bank_statement_path"]
             app_state["credit_report_path"] = st.session_state.state["credit_report_path"]
+            app_state["emirates_id_image_path"] = st.session_state.state["emirates_id_path"]
 
             result = graph.invoke(app_state)
 
@@ -121,22 +133,26 @@ def render_chatbot_manager(policy_vectorstore=None):
                 for issue in result["validation_result"].get("issues", []):
                     st.write("-", issue)
 
-            if "eligibility_result" in result:
-                st.metric(
-                    label="Eligibility Score",
-                    value=result["eligibility_result"]["eligibility_score"]
-                )
+            if status == "AUTO_APPROVE":
+                if "eligibility_result" in result:
+                    st.metric(
+                        label="Eligibility Score",
+                        value=result["eligibility_result"]["eligibility_score"]
+                    )
 
-                # -----------------------------
-                # Explanation
-                # -----------------------------
-                if "explanation" in result["eligibility_result"]:
-                    st.subheader("📝 Decision Explanation")
-                    st.write(result["eligibility_result"]["explanation"]["summary"])
+                    # -----------------------------
+                    # Explanation
+                    # -----------------------------
+                    if "explanation" in result["eligibility_result"]:
+                        st.subheader("📝 Decision Explanation")
+                        st.write(result["eligibility_result"]["explanation"]["summary"])
 
-                    st.markdown("**Key Factors:**")
-                    for factor in result["eligibility_result"]["explanation"]["key_factors"]:
-                        st.write("•", factor)
+                        st.markdown("**Key Factors:**")
+                        for factor in result["eligibility_result"]["explanation"]["key_factors"]:
+                            st.write("•", factor)
+
+                    for r in result["enablement_recommendations"]["recommendations"]:
+                        st.info(r["message"])
 
             # -----------------------------
             # Audit / Debug

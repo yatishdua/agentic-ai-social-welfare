@@ -207,6 +207,9 @@ def run_form_app():
                 for factor in result["eligibility_result"]["explanation"]["key_factors"]:
                     st.write("•", factor)
 
+            for r in result["enablement_recommendations"]["recommendations"]:
+                st.info(r["message"])
+
         # -----------------------------
         # Audit / Debug
         # -----------------------------

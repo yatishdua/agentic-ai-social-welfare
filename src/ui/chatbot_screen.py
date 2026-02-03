@@ -217,6 +217,18 @@ def render_chatbot():
                 "content": f"### Eligibility Result\n\n{result.get('eligibility_result')}"
             }
         )
+
+        reommendation=[]
+        for r in result["enablement_recommendations"]["recommendations"]:
+                        reommendation.append(r["message"])
+
+        
+        st.session_state.chat_messages.append(
+            {
+                "role": "assistant",
+                "content": f"### Enablement Recommendations\n\n{'\n\n'.join(reommendation)}"
+            }
+        )
         st.rerun()
 
     # -------------------------------

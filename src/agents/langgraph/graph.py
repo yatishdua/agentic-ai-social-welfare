@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END
+from src.agents.enablement.enablement_agent import enablement_agent
 from src.agents.langgraph.state import ApplicationState
 from src.agents.langgraph.nodes import (
     ocr_node,
@@ -23,6 +24,7 @@ def build_application_graph():
     graph.add_node("extract", extraction_node)
     graph.add_node("validate", validation_node)
     graph.add_node("eligibility", eligibility_node)
+    graph.add_node("enablement", enablement_agent)
 
     graph.set_entry_point("ocr")
 
@@ -44,6 +46,10 @@ def build_application_graph():
         }
     )
 
-    graph.add_edge("eligibility", END)
+    
+
+    graph.add_edge("eligibility", "enablement")
+    graph.add_edge("enablement", END)
+
 
     return graph.compile()
