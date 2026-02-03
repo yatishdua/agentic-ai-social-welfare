@@ -4,6 +4,10 @@ from typing import TypedDict, Dict, Any, List
 class ApplicationState(TypedDict):
     applicant_id: str
 
+    # NEW (safe additions)
+    interaction_mode: str            # "form" | "chatbot"
+    intent: str                      # "APPLY_WELFARE" | "KNOW_CRITERIA"
+
     ui_data: Dict[str, Any]
 
     bank_statement_path: str
