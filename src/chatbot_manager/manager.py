@@ -1,7 +1,14 @@
 from rag.rag_chain import answer_policy_question
+from rag.qa_agent import PolicyQARouter
+from chatbot_manager.intake_agent import IntakeRouter
 import os
 
-def handle_turn(state, validation, intake=None,policy_vectorstore=None):
+
+policy_router = PolicyQARouter()
+intake_router = IntakeRouter()
+
+
+def handle_turn(state, validation, intake=None, policy_vectorstore=None):
     intent = validation.intent
 
     # ---------- OUT OF SCOPE ----------
@@ -10,6 +17,14 @@ def handle_turn(state, validation, intake=None,policy_vectorstore=None):
 
     # ---------- ASK CRITERIA (ANYTIME) ----------
     if intent == "ASK_CRITERIA":
+        route = policy_router.route(validation.raw_answer)
+
+        if route.action == "ASK_CLARIFY" and route.clarification:
+            return route.clarification
+
+        if route.action == "ANSWER_DIRECT":
+            return "Please ask a specific policy question so I can answer accurately."
+
         result = answer_policy_question(
             policy_vectorstore,
             validation.raw_answer
@@ -28,19 +43,26 @@ def handle_turn(state, validation, intake=None,policy_vectorstore=None):
     if intent == "START_APPLY" and state["mode"] != "APPLY":
         state["mode"] = "APPLY"
         state["phase"] = "INTAKE"
-        return "Sure. Let’s start your application.\n\nWhat is your employment status? (employed or unemployed)"
+        return "Sure. Letâ€™s start your application.\n\nWhat is your employment status? (employed or unemployed)"
 
     # ---------- APPLY FLOW ----------
     if state["mode"] == "APPLY":
 
         # INTAKE PHASE
         if state["phase"] == "INTAKE" and intake:
+            route = intake_router.route(
+                validation.raw_answer,
+                recent_messages=state.get("recent_messages")
+            )
+            if route.action == "ASK_CLARIFY" and route.clarification:
+                return route.clarification
+
             state["ui_data"] = intake.ui_data.model_dump(exclude_none=True)
 
             if intake.next_question:
                 return intake.next_question
 
-            # Intake complete → move to review
+            # Intake complete â†’ move to review
             if not intake.missing_fields:
                 state["phase"] = "REVIEW"
                 summary = "\n".join(
@@ -61,10 +83,10 @@ def handle_turn(state, validation, intake=None,policy_vectorstore=None):
                     return "Great. Please upload your documents."
                 else:
                     state["phase"] = "INTAKE"
-                    return "Okay. Let’s continue editing your application."
+                    return "Okay. Letâ€™s continue editing your application."
 
         # UPLOAD PHASE
         if state["phase"] == "UPLOAD":
-            return "Waiting for document uploads…"
+            return "Waiting for document uploadsâ€¦"
 
     return "How can I help you?"

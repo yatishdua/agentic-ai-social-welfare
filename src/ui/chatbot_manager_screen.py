@@ -195,6 +195,7 @@ def render_chatbot_manager(policy_vectorstore=None):
         intake = run_intake(st.session_state.messages,sid,st.session_state.state["ui_data"])
 
     # 3️⃣ Manager decides
+    st.session_state.state["recent_messages"] = st.session_state.messages
     response = handle_turn(
         st.session_state.state,
         validation,

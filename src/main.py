@@ -12,8 +12,8 @@ from rag.policy_loader import load_policy_rag
 def load_policy_rag_():
     return load_policy_rag()
 
-# policy_vectorstore = load_policy_rag_()
-policy_vectorstore = None
+policy_vectorstore = load_policy_rag_()
+# policy_vectorstore = None
 
 st.set_page_config(
     page_title="Social Welfare Assistant",
